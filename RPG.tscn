@@ -1,0 +1,243 @@
+[gd_scene load_steps=11 format=3 uid="uid://od5r3fi1na7s"]
+
+[ext_resource type="Script" path="res://RPG.gd" id="1_0w0im"]
+[ext_resource type="Script" path="res://ClassScripts/Action.gd" id="1_v2il2"]
+[ext_resource type="Script" path="res://ClassScripts/Character.gd" id="3_te00t"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6cjoo"]
+bg_color = Color(0.632395, 0, 0, 1)
+
+[sub_resource type="GDScript" id="GDScript_3ak7x"]
+script/source = "static func run(targets):
+	targets[0].health -= 1
+	return [\"Dealt 1 damage\"]
+"
+
+[sub_resource type="GDScript" id="GDScript_4qgc4"]
+script/source = "static func run(targets):
+	var damage = randi_range(0, 10)
+	targets[0].health -= damage
+	return [\"Dealt %d damage\" % damage]
+"
+
+[sub_resource type="GDScript" id="GDScript_k1ny0"]
+script/source = "static func run(targets):
+	if not \"distracted_before\" in targets[0].get_meta_list():
+		return [\"The enemy didn't seem to want to talk.\"]
+	if targets[0].get_meta(\"distracted_before\") != 6:
+		return [\"The enemy didn't seem to want to talk.\"]
+	targets[0].ally = true
+	targets[0].get_parent().actionPoints = 0
+	return [\"You ask the enemy if he'd like to play a game of UNO.\", \"He decides that you're not worth fighting.\"]
+"
+
+[sub_resource type="GDScript" id="GDScript_irss6"]
+script/source = "static func run(targets):
+	return [\"The enemy refused to listen.\"]
+"
+
+[sub_resource type="GDScript" id="GDScript_lmv3d"]
+script/source = "static func run(targets):
+	if \"distracted_before\" in targets[0].get_meta_list():
+		match targets[0].get_meta(\"distracted_before\"):
+			5:
+				targets[0].set_meta(\"distracted_before\", 4)
+				return [\"You tell your enemy there's something behind him.\", \"He was unamused at your attempt.\"]
+			4:
+				targets[0].set_meta(\"distracted_before\", 3)
+				return [\"You tell your enemy his boss is behind him.\", \"He flinches but he sees through your lie.\"]
+			3:
+				targets[0].set_meta(\"distracted_before\", 2)
+				return [\"You tell your enemy his boss is walking toward the both of you.\", \"A bead of sweat falls down his cheek.\"]
+			2:
+				targets[0].set_meta(\"distracted_before\", 1)
+				return [\"You tell your enemy his boss seems really mad.\", \"He is sweating profusely.\"]
+			1:
+				targets[0].set_meta(\"distracted_before\", 0)
+				return [\"You tell your enemy his boss is right behind him.\", \"His legs are shaking.\"]
+			0:
+				targets[0].get_tree().root.get_node(\"Control\").actionPoints += 7
+				targets[0].set_meta(\"distracted_before\", 6)
+				return [\"You tell your enemy he really should turn around.\", \"He looked.\"]
+			6:
+				return [\"You tell your enemy to look behind him once more.\", \"He's reasonably angry.\", \"You'll probably need to try something else.\"]
+	targets[0].get_tree().root.get_node(\"Control\").actionPoints += 7
+	targets[0].set_meta(\"distracted_before\", 5)
+	return [\"You tell your enemy there's something behind him.\", \"He looked.\"]
+"
+
+[sub_resource type="GDScript" id="GDScript_wh1l5"]
+script/source = "static func run(targets):
+	targets[0].health += 20
+	return [\"You healed 20 HP!\"]
+"
+
+[node name="Control" type="Control" node_paths=PackedStringArray("attacks")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0w0im")
+attacks = NodePath("Actions")
+
+[node name="Player" type="ProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.9
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = 1.43997
+offset_right = 4.0
+grow_vertical = 0
+theme_override_styles/fill = SubResource("StyleBoxFlat_6cjoo")
+value = 100.0
+show_percentage = false
+
+[node name="Info" type="Label" parent="Player"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+offset_left = -0.12001
+offset_top = -0.0599976
+offset_right = 0.23999
+offset_bottom = 0.0800018
+text = "YOU
+HP: 20/20 AP:1"
+metadata/_edit_use_anchors_ = true
+
+[node name="Enemy" type="ProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.49566
+anchor_right = 0.99566
+anchor_bottom = 0.100309
+offset_top = 1.43997
+offset_right = 4.0
+grow_vertical = 0
+theme_override_styles/fill = SubResource("StyleBoxFlat_6cjoo")
+value = 80.0
+fill_mode = 1
+show_percentage = false
+metadata/_edit_use_anchors_ = true
+
+[node name="Info" type="Label" parent="Enemy"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+offset_left = -0.12001
+offset_top = -0.0599976
+offset_right = 0.23999
+offset_bottom = 0.0800018
+text = "ENEMY
+HP: 20/20"
+horizontal_alignment = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="ActionsSelect" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.75
+anchor_top = 0.3
+anchor_right = 1.0
+anchor_bottom = 0.7
+offset_right = -0.568008
+offset_bottom = 0.159988
+metadata/_edit_use_anchors_ = true
+
+[node name="Actions" type="Node" parent="."]
+
+[node name="Combat" type="Node" parent="Actions"]
+
+[node name="Slash" type="Node" parent="Actions/Combat"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_3ak7x")
+Target = 1
+
+[node name="Pierce" type="Node" parent="Actions/Combat"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 3
+action_script = SubResource("GDScript_4qgc4")
+Target = 1
+
+[node name="Talk" type="Node" parent="Actions"]
+
+[node name="Convince" type="Node" parent="Actions/Talk"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_k1ny0")
+Target = 1
+
+[node name="Degrade" type="Node" parent="Actions/Talk"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 3
+action_script = SubResource("GDScript_irss6")
+Target = 1
+
+[node name="Distract" type="Node" parent="Actions/Talk"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 2
+action_script = SubResource("GDScript_lmv3d")
+Target = 1
+
+[node name="Item" type="Node" parent="Actions"]
+
+[node name="Health Potion" type="Node" parent="Actions/Item"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_wh1l5")
+remove_on_use = true
+Target = 0
+
+[node name="Health Potion (2)" type="Node" parent="Actions/Item"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_wh1l5")
+remove_on_use = true
+Target = 0
+
+[node name="Health Potion (3)" type="Node" parent="Actions/Item"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_wh1l5")
+remove_on_use = true
+Target = 0
+
+[node name="Health Potion (4)" type="Node" parent="Actions/Item"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_wh1l5")
+remove_on_use = true
+Target = 0
+
+[node name="Health Potion (5)" type="Node" parent="Actions/Item"]
+script = ExtResource("1_v2il2")
+action_point_requirement = 1
+action_script = SubResource("GDScript_wh1l5")
+remove_on_use = true
+Target = 0
+
+[node name="EnemyChar" type="Node" parent="."]
+script = ExtResource("3_te00t")
+
+[node name="PlayerChar" type="Node" parent="."]
+script = ExtResource("3_te00t")
+
+[node name="Flavortext" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.452
+anchor_bottom = 0.537
+offset_right = 0.295959
+offset_bottom = 0.0239868
+autowrap_mode = 3
+clip_text = true
